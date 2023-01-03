@@ -10,7 +10,6 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(s string) (string, error) {
-
 	ru := []rune(s)
 	if len(ru) == 0 {
 		return "", nil
@@ -41,7 +40,6 @@ func Unpack(s string) (string, error) {
 			newStr.WriteString(strings.Repeat(string(ru[i-1]), digit))
 			continue
 		}
-
 	}
 	return newStr.String(), nil
 }
