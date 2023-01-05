@@ -10,25 +10,22 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(s string) (string, error) {
-	ru := []rune(s)
-	if len(ru) == 0 {
+	var (
+		builder strings.Builder
+		runes   []rune
+	)
+
+	runes = []rune(s)
+	if len(runes) == 0 {
 		return "", nil
 	}
-	var newStr strings.Builder
-	for i := range ru {
-		if unicode.IsDigit(ru[i]) && (i == 0 || unicode.IsDigit(ru[i-1])) {
-			return "", ErrInvalidString
-		}
+	for i := range runes {
+		if unicode.IsDigit(runes[i]) {
+			if i == 0 || unicode.IsDigit(runes[i-1]) {
+				return "", ErrInvalidString
+			}
 
-		if unicode.IsLetter(ru[i]) && (i == len(ru)-1 || (i == 0 && !unicode.IsDigit(ru[i+1])) ||
-			(i != len(ru)-1 && unicode.IsLetter(ru[i+1]))) {
-			newStr.WriteRune(ru[i])
-			continue
-		}
-
-		if unicode.IsDigit(ru[i]) && (unicode.IsLetter(ru[i-1]) ||
-			unicode.IsSpace(ru[i-1])) {
-			digit, err := strconv.Atoi(string(ru[i]))
+			digit, err := strconv.Atoi(string(runes[i]))
 			if err != nil {
 				return "", ErrInvalidString
 			}
@@ -36,10 +33,17 @@ func Unpack(s string) (string, error) {
 			if digit == 0 {
 				continue
 			}
+			builder.WriteString(strings.Repeat(string(runes[i-1]), digit))
+		}
 
-			newStr.WriteString(strings.Repeat(string(ru[i-1]), digit))
-			continue
+		if !unicode.IsDigit(runes[i]) && isLiteralSingle(i, runes) {
+			builder.WriteRune(runes[i])
 		}
 	}
-	return newStr.String(), nil
+	return builder.String(), nil
+}
+
+func isLiteralSingle(i int, runes []rune) bool {
+	return i == len(runes)-1 || !unicode.IsDigit(runes[i+1]) &&
+		(i == 0 || i != len(runes)-1)
 }
